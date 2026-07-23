@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -18,6 +17,7 @@ model User {
   updatedAt     DateTime  @updatedAt
   accounts      Account[]
   sessions      Session[]
+  posts         Post[]
 
   role       String?
   banned     Boolean?  @default(false)
@@ -74,4 +74,23 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+model Post {
+  id        String  @id @default(cuid())
+  title     String
+  slug      String  @unique
+  content   String
+  published Boolean @default(false)
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([authorId])
+  @@index([published])
+  @@index([createdAt])
+  @@map("post")
 }
