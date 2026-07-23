@@ -10,6 +10,7 @@ import {
 	DEFAULT_POST_SORT_FIELD,
 	DEFAULT_POST_SORT_ORDER,
 } from "./constants.js";
+import { toPost } from "./dto.js";
 import { postRepository } from "./repository.js";
 import type { CreatePost, PostListQuery, UpdatePost } from "./schema.js";
 
@@ -54,7 +55,7 @@ async function findMany(query: PostListQuery) {
 	]);
 
 	return paginated(
-		posts,
+		posts.map(toPost),
 		createPaginationMeta({
 			page: query.page,
 			limit: query.limit,
@@ -70,7 +71,7 @@ async function findById(id: string) {
 		throw new NotFoundError("Post not found");
 	}
 
-	return data(post);
+	return data(toPost(post));
 }
 
 async function create(userId: string, input: CreatePost) {
@@ -84,7 +85,7 @@ async function create(userId: string, input: CreatePost) {
 			},
 		});
 
-		return data(post);
+		return data(toPost(post));
 	} catch (error) {
 		translatePrismaError(error, {
 			conflict: "A post with this slug already exists.",
@@ -100,7 +101,7 @@ async function update(id: string, userId: string, input: UpdatePost) {
 			...input,
 		});
 
-		return data(post);
+		return data(toPost(post));
 	} catch (error) {
 		translatePrismaError(error, {
 			conflict: "A post with this slug already exists.",
