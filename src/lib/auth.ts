@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { admin, openAPI } from "better-auth/plugins";
+import { admin as AdminPlugin, openAPI } from "better-auth/plugins";
+import { ac, admin, user } from "../auth/permissions.js";
 import { env } from "../config/env.js";
 import { prisma } from "./prisma.js";
 
@@ -14,7 +15,16 @@ export const auth = betterAuth({
 	emailAndPassword: {
 		enabled: true,
 	},
-	plugins: [openAPI(), admin()],
+	plugins: [
+		openAPI(),
+		AdminPlugin({
+			ac,
+			roles: {
+				admin,
+				user,
+			},
+		}),
+	],
 });
 
 export type SessionUser = typeof auth.$Infer.Session.user;
@@ -24,3 +34,5 @@ export type AuthType = {
 	user: SessionUser | null;
 	session: SessionData | null;
 };
+
+export type AuthUser = NonNullable<AuthType["user"]>;

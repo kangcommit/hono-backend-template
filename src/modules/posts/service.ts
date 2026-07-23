@@ -1,4 +1,6 @@
+import { isAdmin } from "../../auth/roles.js";
 import { ForbiddenError, NotFoundError } from "../../errors/http-errors.js";
+import type { AuthUser } from "../../lib/auth.js";
 import { translatePrismaError } from "../../lib/prisma-error.js";
 import {
 	createPaginationMeta,
@@ -6,6 +8,7 @@ import {
 } from "../../pagination/pagination.js";
 import { getSorting } from "../../pagination/sorting.js";
 import { data, paginated } from "../../response/payload.js";
+
 import {
 	DEFAULT_POST_SORT_FIELD,
 	DEFAULT_POST_SORT_ORDER,
@@ -14,14 +17,18 @@ import { toPost } from "./dto.js";
 import { postRepository } from "./repository.js";
 import type { CreatePost, PostListQuery, UpdatePost } from "./schema.js";
 
-async function findOwnedById(id: string, userId: string) {
+async function ensureCanManagePost(id: string, user: AuthUser) {
 	const post = await postRepository.findById(id);
 
 	if (!post) {
 		throw new NotFoundError("Post not found.");
 	}
 
-	if (post.authorId !== userId) {
+	if (isAdmin(user)) {
+		return post;
+	}
+
+	if (post.authorId !== user.id) {
 		throw new ForbiddenError("You do not have permission to modify this post.");
 	}
 
@@ -93,8 +100,8 @@ async function create(userId: string, input: CreatePost) {
 	}
 }
 
-async function update(id: string, userId: string, input: UpdatePost) {
-	await findOwnedById(id, userId);
+async function update(id: string, user: AuthUser, input: UpdatePost) {
+	await ensureCanManagePost(id, user);
 
 	try {
 		const post = await postRepository.update(id, {
@@ -109,8 +116,8 @@ async function update(id: string, userId: string, input: UpdatePost) {
 	}
 }
 
-async function deletePost(id: string, userId: string) {
-	await findOwnedById(id, userId);
+async function deletePost(id: string, user: AuthUser) {
+	await ensureCanManagePost(id, user);
 
 	await postRepository.delete(id);
 }

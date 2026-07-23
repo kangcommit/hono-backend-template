@@ -44,7 +44,7 @@ postsRouter.openapi(updatePostRoute, async (c) => {
 
 	const user = getCurrentUser(c);
 
-	const post = await postService.update(id, user.id, body);
+	const post = await postService.update(id, user, body);
 
 	return c.json(post);
 });
@@ -54,7 +54,7 @@ postsRouter.openapi(deletePostRoute, async (c) => {
 
 	const user = getCurrentUser(c);
 
-	await postService.delete(id, user.id);
+	await postService.delete(id, user);
 
 	return c.json(null);
 });
