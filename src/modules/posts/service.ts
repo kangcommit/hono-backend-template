@@ -1,4 +1,4 @@
-import { NotFoundError } from "../../errors/http-errors.js";
+import { ForbiddenError, NotFoundError } from "../../errors/http-errors.js";
 import { translatePrismaError } from "../../lib/prisma-error.js";
 import {
 	createPaginationMeta,
@@ -12,6 +12,20 @@ import {
 } from "./constants.js";
 import { postRepository } from "./repository.js";
 import type { CreatePost, PostListQuery, UpdatePost } from "./schema.js";
+
+async function findOwnedById(id: string, userId: string) {
+	const post = await postRepository.findById(id);
+
+	if (!post) {
+		throw new NotFoundError("Post not found.");
+	}
+
+	if (post.authorId !== userId) {
+		throw new ForbiddenError("You do not have permission to modify this post.");
+	}
+
+	return post;
+}
 
 async function findMany(query: PostListQuery) {
 	const { skip, take } = getPagination(query);
@@ -78,8 +92,8 @@ async function create(userId: string, input: CreatePost) {
 	}
 }
 
-async function update(id: string, input: UpdatePost) {
-	await findById(id);
+async function update(id: string, userId: string, input: UpdatePost) {
+	await findOwnedById(id, userId);
 
 	try {
 		const post = await postRepository.update(id, {
@@ -94,14 +108,10 @@ async function update(id: string, input: UpdatePost) {
 	}
 }
 
-async function deletePost(id: string) {
-	await findById(id);
+async function deletePost(id: string, userId: string) {
+	await findOwnedById(id, userId);
 
-	try {
-		return await postRepository.delete(id);
-	} catch (error) {
-		translatePrismaError(error);
-	}
+	await postRepository.delete(id);
 }
 
 export const postService = {

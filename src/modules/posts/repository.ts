@@ -50,6 +50,15 @@ async function remove(id: string) {
 	});
 }
 
+async function findOwnedById(id: string, authorId: string) {
+	return prisma.post.findFirst({
+		where: {
+			id,
+			authorId,
+		},
+	});
+}
+
 export const postRepository = {
 	findMany,
 	count,
@@ -57,4 +66,5 @@ export const postRepository = {
 	create,
 	update,
 	delete: remove,
+	findOwnedById,
 };
