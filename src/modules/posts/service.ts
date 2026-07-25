@@ -7,8 +7,6 @@ import {
 	getPagination,
 } from "../../pagination/pagination.js";
 import { getSorting } from "../../pagination/sorting.js";
-import { data, paginated } from "../../response/payload.js";
-
 import {
 	DEFAULT_POST_SORT_FIELD,
 	DEFAULT_POST_SORT_ORDER,
@@ -61,14 +59,14 @@ async function findMany(query: PostListQuery) {
 		}),
 	]);
 
-	return paginated(
-		posts.map(toPost),
-		createPaginationMeta({
+	return {
+		data: posts.map(toPost),
+		meta: createPaginationMeta({
 			page: query.page,
 			limit: query.limit,
 			total,
 		}),
-	);
+	};
 }
 
 async function findById(id: string) {
@@ -78,7 +76,7 @@ async function findById(id: string) {
 		throw new NotFoundError("Post not found");
 	}
 
-	return data(toPost(post));
+	return toPost(post);
 }
 
 async function create(userId: string, input: CreatePost) {
@@ -92,7 +90,7 @@ async function create(userId: string, input: CreatePost) {
 			},
 		});
 
-		return data(toPost(post));
+		return toPost(post);
 	} catch (error) {
 		translatePrismaError(error, {
 			conflict: "A post with this slug already exists.",
@@ -108,7 +106,7 @@ async function update(id: string, user: AuthUser, input: UpdatePost) {
 			...input,
 		});
 
-		return data(toPost(post));
+		return toPost(post);
 	} catch (error) {
 		translatePrismaError(error, {
 			conflict: "A post with this slug already exists.",
