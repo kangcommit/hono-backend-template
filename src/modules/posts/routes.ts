@@ -11,6 +11,7 @@ import {
 } from "../../openapi/responses.js";
 import { OPENAPI_TAGS } from "../../openapi/tags.js";
 import { createPaginatedResponseSchema } from "../../pagination/response.js";
+import { POST_PERMISSIONS } from "./permissions.js";
 import {
 	CreatePostSchema,
 	PostListQuerySchema,
@@ -59,7 +60,7 @@ export const createPostRoute = createRoute({
 	tags,
 	summary: "Create post",
 	description: "Creates a new post.",
-	middleware: [requireAuth, requirePermission({ post: ["create"] })],
+	middleware: [requireAuth, requirePermission(POST_PERMISSIONS.CREATE)],
 	request: {
 		...requestBody(CreatePostSchema),
 	},
@@ -75,7 +76,7 @@ export const updatePostRoute = createRoute({
 	tags,
 	summary: "Update post",
 	description: "Updates an existing post.",
-	middleware: [requireAuth, requirePermission({ post: ["update"] })],
+	middleware: [requireAuth, requirePermission(POST_PERMISSIONS.UPDATE)],
 	request: {
 		params: PostParamsSchema,
 		...requestBody(UpdatePostSchema),
@@ -93,7 +94,7 @@ export const deletePostRoute = createRoute({
 	tags,
 	summary: "Delete post",
 	description: "Deletes a post.",
-	middleware: [requireAuth, requirePermission({ post: ["delete"] })],
+	middleware: [requireAuth, requirePermission(POST_PERMISSIONS.DELETE)],
 	request: {
 		params: PostParamsSchema,
 	},
