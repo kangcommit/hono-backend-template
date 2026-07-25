@@ -43,8 +43,6 @@ export const PostParamsSchema = z.object({
 	id: z.string(),
 });
 
-export type PostParams = z.infer<typeof PostParamsSchema>;
-export type Post = z.infer<typeof PostSchema>;
 export type CreatePost = z.infer<typeof CreatePostSchema>;
 export type UpdatePost = z.infer<typeof UpdatePostSchema>;
 export type PostListQuery = z.infer<typeof PostListQuerySchema>;
