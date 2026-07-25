@@ -288,6 +288,7 @@ Additional documentation is available in the `docs` directory.
 | Document | Description |
 |----------|-------------|
 | `docs/architecture.md` | Project architecture and design principles |
+| `docs/example-domain.md` | Walkthrough of the example Posts module. |
 | `docs/conventions.md` | Coding conventions and project structure |
 | `docs/testing.md` | Testing strategy and guidelines |
 | `CONTRIBUTING.md` | Contribution workflow and development guidelines |

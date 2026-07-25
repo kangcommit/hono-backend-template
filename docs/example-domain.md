@@ -1,10 +1,13 @@
+> **Note**
+>
+> This document builds on the concepts introduced in `docs/architecture.md`.
+> It demonstrates how those architectural principles are applied in the example Posts module.
+
 # Example Domain
 
 The `posts` module is a reference implementation demonstrating how to build a feature using this template.
 
 It is intentionally simple and is not intended to represent a complete blogging system. Instead, it showcases the recommended project structure, coding conventions, and interaction between the different application layers.
-
----
 
 # Module Structure
 
@@ -35,8 +38,6 @@ Each file has a single responsibility.
 | `schema.ts` | Defines request and response schemas |
 | `service.ts` | Implements business logic |
 
----
-
 # Request Lifecycle
 
 A request passes through several layers before reaching the database.
@@ -65,8 +66,6 @@ Database
 
 Each layer has a specific responsibility and should remain focused on that responsibility.
 
----
-
 # Authorization
 
 Authorization is performed in two stages.
@@ -83,8 +82,6 @@ For example:
 
 This is handled by permission middleware before business logic is executed.
 
----
-
 ## Resource-level authorization
 
 Services verify whether the authenticated user is allowed to modify a specific resource.
@@ -95,8 +92,6 @@ For example:
 - Administrators may edit any post.
 
 Keeping ownership checks inside the service layer ensures business rules remain consistent regardless of how the service is used.
-
----
 
 # Data Flow
 
@@ -122,8 +117,6 @@ JSON Response
 
 This prevents persistence models from leaking into the public API and allows the API contract to evolve independently from the database schema.
 
----
-
 # Creating a New Module
 
 The recommended approach is to use the example module as a starting point.
@@ -137,8 +130,6 @@ The recommended approach is to use the example module as a starting point.
 7. Register the router.
 
 Following the same structure keeps every module consistent and predictable.
-
----
 
 # What to Reuse
 
