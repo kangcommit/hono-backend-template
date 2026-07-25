@@ -9,7 +9,7 @@ function getRoles(user: AuthUser): string[] {
 	return user.role?.split(",").map((role) => role.trim()) ?? [];
 }
 
-export function hasRole(user: AuthUser, role: string): boolean {
+function hasRole(user: AuthUser, role: string): boolean {
 	return getRoles(user).includes(role);
 }
 
