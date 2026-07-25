@@ -19,14 +19,10 @@ async function ensureCanManagePost(id: string, user: AuthUser) {
 	const post = await postRepository.findById(id);
 
 	if (!post) {
-		throw new NotFoundError("Post not found.");
+		throw new NotFoundError("Post not found");
 	}
 
-	if (isAdmin(user)) {
-		return post;
-	}
-
-	if (post.authorId !== user.id) {
+	if (!isAdmin(user) && post.authorId !== user.id) {
 		throw new ForbiddenError("You do not have permission to modify this post.");
 	}
 
