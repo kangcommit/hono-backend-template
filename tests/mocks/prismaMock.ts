@@ -29,6 +29,7 @@ export const prismaMock = {
 	session: createModelMock(),
 	account: createModelMock(),
 	verification: createModelMock(),
+	post: createModelMock(),
 };
 
 export function resetPrismaMocks() {
