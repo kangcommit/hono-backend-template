@@ -4,13 +4,13 @@
 
 A Node.js API built with Hono, TypeScript, and PostgreSQL through Prisma.
 
-This template includes request validation, OpenAPI documentation with Scalar, structured logging with Pino, Biome, Vitest, and Knip.
+This template includes Better Auth with email/password sign-in and optional Google OAuth, request validation, OpenAPI documentation with Scalar, structured logging with Pino, Biome, Vitest, and Knip.
 
 ## Requirements
 
 - Node.js `22.12.0` or newer.
 - pnpm `12.16.1`, matching the `packageManager` field in `package.json`.
-- PostgreSQL for readiness checks and database-backed routes.
+- PostgreSQL for Better Auth sessions, readiness checks, and database-backed routes.
 
 ## Getting started
 
@@ -19,10 +19,18 @@ Copy this template directory into your application repository, then run these co
 ```bash
 cp .env.example .env
 pnpm install
+```
+
+Set `DATABASE_URL` to your PostgreSQL connection string, `CORS_ORIGIN` to the browser application's origin, and `BETTER_AUTH_URL` to `http://localhost:8000` in `.env`. Replace `BETTER_AUTH_SECRET` with a random secret of at least 32 characters; generate one with `openssl rand -base64 32`. Google OAuth is optional: set both `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` to enable it.
+
+Run the initial database migration, then start the API:
+
+```bash
+pnpm db:migrate:dev
 pnpm dev
 ```
 
-Set `DATABASE_URL` to your PostgreSQL connection string and `CORS_ORIGIN` to the browser application's origin in `.env`. The API starts at [http://localhost:8000](http://localhost:8000). Check [http://localhost:8000/health/live](http://localhost:8000/health/live) for liveness and [http://localhost:8000/docs](http://localhost:8000/docs) for the API reference.
+The API starts at [http://localhost:8000](http://localhost:8000). Check [http://localhost:8000/health/live](http://localhost:8000/health/live) for liveness and [http://localhost:8000/docs](http://localhost:8000/docs) for the API reference. Better Auth endpoints are mounted at `/api/auth/*`.
 
 Before building your product, update the package name in `package.json` and replace the example health feature with your application routes.
 
@@ -45,18 +53,28 @@ Before building your product, update the package name in `package.json` and repl
 | `pnpm knip`              | Check for unused files, exports, and dependencies.             |
 | `pnpm verify`            | Run Biome, type checking, unit tests, build, and Knip checks.  |
 
+## Authentication
+
+Better Auth provides database-backed sessions and email/password sign-in. Google sign-in is enabled when both Google OAuth credentials are configured. In Google Cloud, register `http://localhost:8000/api/auth/callback/google` as an authorized redirect URI. For production, use the production `BETTER_AUTH_URL` with the same `/api/auth/callback/google` suffix. Clients can start the flow with Better Auth's social sign-in method and `provider: 'google'` ([social sign-on guide](https://better-auth.com/docs/basic-usage#social-sign-on)). Its endpoints appear as the **Authentication** source in the Scalar reference at `/docs`, alongside the Hono API. Browser clients calling the API from another origin must send credentials; CORS is limited to `CORS_ORIGIN`, which is also the Better Auth trusted origin. In protected route handlers, read the session with `auth.api.getSession({ headers: c.req.raw.headers })` and enforce resource permissions in the feature logic. Health routes remain public.
+
+The [Better Auth OpenAPI plugin](https://better-auth.com/docs/plugins/open-api) is early-stage; review its generated schema before using it to generate client code.
+
+Email verification and password reset require a transactional email provider. Add those callbacks before relying on those flows in production.
+
 ## Project structure
 
 | Location                | Responsibility                                      |
 | ----------------------- | --------------------------------------------------- |
 | `src/app.ts`            | Compose middleware, routes, API docs, and handlers. |
 | `src/index.ts`          | Start the Node.js server and handle shutdown.       |
+| `src/auth/`             | Configure Better Auth with the Prisma adapter.      |
 | `src/health/`           | Example health feature and PostgreSQL readiness.    |
 | `src/http/`             | Shared routing, middleware, errors, and OpenAPI.    |
 | `src/config/env.ts`     | Load and validate environment configuration.        |
 | `src/db/prisma.ts`      | Create the process-wide Prisma client.              |
 | `src/observability/`    | Configure the Pino logger.                          |
 | `prisma/schema.prisma`  | Define database models and Prisma Client settings.  |
+| `prisma/migrations/`    | Store reviewed PostgreSQL schema migrations.        |
 | `prisma.config.ts`      | Configure Prisma CLI and migrations.                |
 | `src/generated/prisma/` | Generated Prisma Client; do not edit.               |
 | `tests/`                | Application and database integration tests.         |
@@ -88,15 +106,19 @@ Prefer the existing Hono, Zod, and Prisma dependencies when they meet the need. 
 
 ## Configuration and conventions
 
-| Variable       | Required | Default                                    | Purpose                                      |
-| -------------- | -------- | ------------------------------------------ | -------------------------------------------- |
-| `DATABASE_URL` | Yes      | —                                          | PostgreSQL connection used by the app.       |
-| `CORS_ORIGIN`  | Yes      | —                                          | The single allowed browser origin.           |
-| `NODE_ENV`     | No       | `development`                              | Runtime environment.                         |
-| `HOST`         | No       | `127.0.0.1`                                | Address the server listens on.               |
-| `PORT`         | No       | `8000`                                     | Port the server listens on.                  |
-| `LOG_LEVEL`    | No       | `debug` (development), `info` (production) | Pino logging threshold.                      |
-| `DIRECT_URL`   | No       | —                                          | Optional direct database URL for migrations. |
+| Variable               | Required | Default                                    | Purpose                                            |
+| ---------------------- | -------- | ------------------------------------------ | -------------------------------------------------- |
+| `DATABASE_URL`         | Yes      | —                                          | PostgreSQL connection used by the app.             |
+| `CORS_ORIGIN`          | Yes      | —                                          | The single allowed browser origin.                 |
+| `BETTER_AUTH_URL`      | Yes      | —                                          | Public base URL for the auth API.                  |
+| `BETTER_AUTH_SECRET`   | Yes      | —                                          | Random secret of at least 32 characters.           |
+| `GOOGLE_CLIENT_ID`     | Optional | —                                          | Google OAuth client ID; configure with its secret. |
+| `GOOGLE_CLIENT_SECRET` | Optional | —                                          | Google OAuth client secret; configure with its ID. |
+| `NODE_ENV`             | No       | `development`                              | Runtime environment.                               |
+| `HOST`                 | No       | `127.0.0.1`                                | Address the server listens on.                     |
+| `PORT`                 | No       | `8000`                                     | Port the server listens on.                        |
+| `LOG_LEVEL`            | No       | `debug` (development), `info` (production) | Pino logging threshold.                            |
+| `DIRECT_URL`           | No       | —                                          | Optional direct database URL for migrations.       |
 
 - Use TypeScript and preserve strict type checking.
 - Keep environment access centralized in `src/config/env.ts`; do not read `process.env` throughout application code.
@@ -109,4 +131,4 @@ Prefer the existing Hono, Zod, and Prisma dependencies when they meet the need. 
 
 ## Production
 
-Run `pnpm build`, apply reviewed migrations with `pnpm db:migrate:deploy`, then run `pnpm start`. Configure `DATABASE_URL`, `CORS_ORIGIN`, and any optional environment values in the deployment environment. For a VPS, run the API under systemd or Docker Compose behind a reverse proxy with HTTPS, and keep PostgreSQL private.
+Run `pnpm build`, apply reviewed migrations with `pnpm db:migrate:deploy`, then run `pnpm start`. Configure `DATABASE_URL`, `CORS_ORIGIN`, `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET`, and any optional environment values in the deployment environment. Use a unique production secret. For a VPS, run the API under systemd or Docker Compose behind a reverse proxy with HTTPS, and keep PostgreSQL private.

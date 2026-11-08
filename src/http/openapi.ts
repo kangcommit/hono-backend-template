@@ -11,5 +11,14 @@ export function registerApiDocs(app: App) {
     },
   })
 
-  app.get('/docs', Scalar({ url: '/openapi.json', pageTitle: 'Hono API Reference' }))
+  app.get(
+    '/docs',
+    Scalar({
+      pageTitle: 'Hono API Reference',
+      sources: [
+        { url: '/openapi.json', title: 'Hono API' },
+        { url: '/api/auth/open-api/generate-schema', title: 'Authentication' },
+      ],
+    }),
+  )
 }

@@ -27,6 +27,7 @@ export function configureMiddleware(app: App) {
     cors({
       origin: env.corsOrigin,
       allowHeaders: ['Authorization', 'Content-Type'],
+      credentials: true,
     }),
   )
   app.use(
